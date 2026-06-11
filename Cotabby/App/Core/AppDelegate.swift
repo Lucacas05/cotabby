@@ -1,5 +1,6 @@
 import AppKit
 import Combine
+import CoreServices
 import Logging
 
 /// File overview:
@@ -30,7 +31,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     let settingsCoordinator: SettingsCoordinator
 
     private let activationIndicatorController: ActivationIndicatorController
-    private let focusDebugOverlayController: FocusDebugOverlayController?
     /// Retained for the app's lifetime because the environment owns its own `cancellables` (the only
     /// subscriptions wiring the focus-poll-interval setting and the global-toggle hotkey rebind to the
     /// runtime). If the environment deallocated when `init` returned, those subscriptions would be
@@ -61,7 +61,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         welcomeCoordinator = environment.welcomeCoordinator
         settingsCoordinator = environment.settingsCoordinator
         activationIndicatorController = environment.activationIndicatorController
-        focusDebugOverlayController = environment.focusDebugOverlayController
         super.init()
 
         // These closures bridge events across subsystems without forcing those subsystems
@@ -93,29 +92,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         focusModel.$snapshot
             .sink { [weak self] snapshot in
                 self?.updateActivationIndicator(for: snapshot)
-                self?.focusDebugOverlayController?.update(for: snapshot)
             }
             .store(in: &cancellables)
-
-        if let focusDebugOverlayController {
-            focusModel.$latestPollEvent
-                .compactMap { $0 }
-                .sink { [weak focusDebugOverlayController] pollEvent in
-                    focusDebugOverlayController?.updateFocusPolling(event: pollEvent)
-                }
-                .store(in: &cancellables)
-        }
-
-        suggestionCoordinator.$visualContextStatus
-            .combineLatest(suggestionCoordinator.$latestVisualContextText)
-            .sink { [weak self] status, excerpt in
-                self?.focusDebugOverlayController?.updateVisualContext(
-                    status: status,
-                    excerpt: excerpt
-                )
-            }
-            .store(in: &cancellables)
-
     }
 
     /// Starts runtime and polling services once AppKit reports that app launch finished.
@@ -125,9 +103,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
 
+        let launchSource = Self.currentLaunchSource
         let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "?"
         let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "?"
-        CotabbyLogger.app.info("Cotabby \(version) (build \(build)) launching on macOS \(ProcessInfo.processInfo.operatingSystemVersionString)")
+        CotabbyLogger.app.info("\(ProductIdentity.displayName) \(version) (build \(build)) launching on macOS \(ProcessInfo.processInfo.operatingSystemVersionString)")
         startRuntimeIfPreferredEngineRequiresIt()
         focusModel.start()
         inputMonitor.start()
@@ -136,8 +115,32 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         emojiPickerController.start()
         welcomeCoordinator.presentIfNeeded()
         welcomeCoordinator.presentPermissionReminderIfNeeded()
+        let hasPriorityWindow = welcomeCoordinator.bringForwardIfPresent()
+        if AppLaunchPresentationPolicy.shouldShowSettings(
+            launchedAsLoginItem: launchSource.isLoginItem,
+            launchedAsServiceItem: launchSource.isServiceItem,
+            hasPriorityWindow: hasPriorityWindow
+        ) {
+            settingsCoordinator.showSettings()
+        }
         didStartServices = true
         CotabbyLogger.app.info("All services started")
+    }
+
+    /// Turns a Finder/Spotlight reopen into a concrete graphical surface.
+    ///
+    /// `hasVisibleWindows` is not a useful decision input for this menu-bar app because AppKit may
+    /// count transient panels or popovers that are not the user's configuration workspace. An
+    /// existing onboarding-owned window keeps priority; otherwise the reusable Settings window is
+    /// shown. Returning `true` tells AppKit that the reopen AppleEvent was handled.
+    func applicationShouldHandleReopen(
+        _ sender: NSApplication,
+        hasVisibleWindows flag: Bool
+    ) -> Bool {
+        if !welcomeCoordinator.bringForwardIfPresent() {
+            settingsCoordinator.showSettings()
+        }
+        return true
     }
 
     /// Synchronously releases native runtime resources before AppKit calls `exit()`.
@@ -159,9 +162,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
 
-        CotabbyLogger.app.info("Cotabby terminating, releasing services")
-        activationIndicatorController.hide(reason: "Activation indicator hidden because Cotabby is terminating.")
-        focusDebugOverlayController?.hide()
+        CotabbyLogger.app.info("\(ProductIdentity.displayName) terminating, releasing services")
+        activationIndicatorController.hide(reason: "Activation indicator hidden because \(ProductIdentity.displayName) is terminating.")
         suggestionCoordinator.stop()
         emojiPickerController.stop()
         inputMonitor.stop()
@@ -170,7 +172,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         runtimeModel.shutdownSync(timeoutSeconds: 1.5)
     }
 
-    /// Shows or hides the field-edge Cotabby icon based on focus state, global enable, per-app
+    /// Shows or hides the neutral field-edge indicator based on focus state, global enable, per-app
     /// disable rules, and the user's indicator toggle.
     private func updateActivationIndicator(for snapshot: FocusSnapshot) {
         guard suggestionSettings.isGloballyEnabled,
@@ -213,5 +215,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// crash before a test assertion runs. The environment variable is supplied by XCTest only.
     private static var isRunningUnderXCTest: Bool {
         ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+    }
+
+    /// Reads launch-source attributes while AppKit is still handling the open-application event.
+    ///
+    /// `keyAELaunchedAsLogInItem` and `keyAELaunchedAsServiceItem` are presence flags: their value
+    /// does not matter. Apple documents them specifically so apps can avoid presenting normal
+    /// foreground UI when the system starts them in the background.
+    private static var currentLaunchSource: (isLoginItem: Bool, isServiceItem: Bool) {
+        let event = NSAppleEventManager.shared().currentAppleEvent
+        return (
+            isLoginItem: event?.attributeDescriptor(
+                forKeyword: AEKeyword(keyAELaunchedAsLogInItem)
+            ) != nil,
+            isServiceItem: event?.attributeDescriptor(
+                forKeyword: AEKeyword(keyAELaunchedAsServiceItem)
+            ) != nil
+        )
     }
 }

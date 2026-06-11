@@ -205,7 +205,7 @@ struct AdvancedPaneView: View {
                     "Sent on every suggestion as reference material — not as instructions."
                 )
                 bulletLine(
-                    "Subordinate to Cotabby's base autocomplete rules, so it cannot override " +
+                    "Subordinate to \(ProductIdentity.displayName)'s base autocomplete rules, so it cannot override " +
                         "core behavior."
                 )
                 bulletLine(
@@ -360,8 +360,8 @@ final class ExtendedContextPlaygroundModel: ObservableObject {
     /// app's accessibility surface.
     private static func makeSyntheticContext(prefixText: String) -> FocusedInputContext {
         let snapshot = FocusedInputSnapshot(
-            applicationName: "Cotabby Playground",
-            bundleIdentifier: "com.cotabby.advanced.playground",
+            applicationName: "\(ProductIdentity.displayName) Playground",
+            bundleIdentifier: "\(Bundle.main.bundleIdentifier ?? "local.autocomplete").advanced.playground",
             processIdentifier: 0,
             elementIdentifier: "playground-field",
             role: "AXTextArea",

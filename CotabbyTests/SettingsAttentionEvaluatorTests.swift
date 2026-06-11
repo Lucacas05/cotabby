@@ -107,7 +107,7 @@ final class SettingsAttentionEvaluatorTests: XCTestCase {
 
     func test_callout_paneWithoutAttention_isNil() {
         let inputs = makeInputs()
-        for category in [SettingsCategory.general, .writing, .shortcuts, .apps, .about] {
+        for category in [SettingsCategory.general, .appearance, .writing, .shortcuts, .apps, .about] {
             XCTAssertNil(
                 SettingsAttentionEvaluator.calloutMessage(for: category, inputs: inputs),
                 "\(category) should never carry a callout"

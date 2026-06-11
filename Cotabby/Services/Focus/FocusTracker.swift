@@ -224,9 +224,9 @@ final class FocusTracker {
 
         if application.bundleIdentifier == ignoredBundleIdentifier {
             return inactiveCapture(
-                applicationName: application.localizedName ?? "Cotabby",
+                applicationName: application.localizedName ?? ProductIdentity.displayName,
                 bundleIdentifier: application.bundleIdentifier,
-                capability: .blocked("Cotabby is focused.")
+                capability: .blocked("\(ProductIdentity.displayName) is focused.")
             )
         }
 
@@ -240,7 +240,7 @@ final class FocusTracker {
             return inactiveCapture(
                 applicationName: application.localizedName ?? "?",
                 bundleIdentifier: application.bundleIdentifier,
-                capability: .blocked("Cotabby is disabled for this app.")
+                capability: .blocked("\(ProductIdentity.displayName) is disabled for this app.")
             )
         }
         noteCaptureResumedIfNeeded()

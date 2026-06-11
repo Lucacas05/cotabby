@@ -17,12 +17,12 @@ enum SuggestionAvailabilityEvaluator {
         checkCapability: Bool = true
     ) -> String? {
         guard globallyEnabled else {
-            return "Cotabby is turned off."
+            return "\(ProductIdentity.displayName) is turned off."
         }
 
         if let bundleIdentifier = focusSnapshot.bundleIdentifier,
            disabledAppBundleIdentifiers.contains(bundleIdentifier) {
-            return "Cotabby is disabled in \(focusSnapshot.applicationName)."
+            return "\(ProductIdentity.displayName) is disabled in \(focusSnapshot.applicationName)."
         }
 
         // Per-site disable: when focus capture resolved a page URL, a host on the user's disabled list
@@ -32,19 +32,19 @@ enum SuggestionAvailabilityEvaluator {
         if let urlString = focusSnapshot.context?.focusedURLString,
            let host = BrowserDomain.host(fromURLString: urlString),
            BrowserDomain.isHostDisabled(host, disabledDomains: disabledDomains) {
-            return "Cotabby is disabled on \(host)."
+            return "\(ProductIdentity.displayName) is disabled on \(host)."
         }
 
         if TerminalAppDetector.isTerminal(bundleIdentifier: focusSnapshot.bundleIdentifier) {
-            return "Cotabby is not available in terminal apps."
+            return "\(ProductIdentity.displayName) is not available in terminal apps."
         }
 
         guard inputMonitoringGranted else {
-            return "Input Monitoring permission is required before Cotabby can react to typing."
+            return "Input Monitoring permission is required before \(ProductIdentity.displayName) can react to typing."
         }
 
         guard screenRecordingGranted else {
-            return "Screen Recording permission is required before Cotabby can build visual context "
+            return "Screen Recording permission is required before \(ProductIdentity.displayName) can build visual context "
                 + "for autocomplete."
         }
 

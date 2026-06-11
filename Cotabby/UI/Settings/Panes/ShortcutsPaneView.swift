@@ -112,7 +112,7 @@ struct ShortcutsPaneView: View {
                         },
                         onReset: nil,
                         onClear: { suggestionSettings.clearGlobalToggleKey() },
-                        clearHelp: "Unbind this shortcut. No key will toggle Tabby on or off.",
+                        clearHelp: "Unbind this shortcut. No key will toggle the app on or off.",
                         conflictChecker: { keyCode, modifiers in
                             suggestionSettings.conflictingShortcutName(
                                 keyCode: keyCode,
@@ -123,8 +123,8 @@ struct ShortcutsPaneView: View {
                     )
                 } label: {
                     SettingsRowLabel(
-                        title: "Toggle Tabby",
-                        description: "Turn Cotabby on or off globally without opening the menu bar."
+                        title: "Toggle App",
+                        description: "Turn \(ProductIdentity.displayName) on or off globally without opening the menu bar."
                     )
                 }
             }

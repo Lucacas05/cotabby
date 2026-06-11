@@ -13,7 +13,7 @@ enum ShortcutAction: CaseIterable {
         switch self {
         case .acceptWord: return "Accept Word"
         case .acceptEntireSuggestion: return "Accept Entire Suggestion"
-        case .toggleTabby: return "Toggle Tabby"
+        case .toggleTabby: return "Toggle App"
         }
     }
 }
@@ -35,6 +35,7 @@ final class SuggestionSettingsModel: ObservableObject {
     @Published private(set) var disabledAppRules: [DisabledApplicationRule]
     @Published private(set) var customSuggestionTextColorHex: String?
     @Published private(set) var ghostTextOpacity: Double
+    @Published private(set) var maximumGhostTextFontSize: Double
     @Published private(set) var selectedEngine: SuggestionEngineKind
     @Published private(set) var selectedWordCountPreset: SuggestionWordCountPreset
     @Published private(set) var isClipboardContextEnabled: Bool
@@ -86,6 +87,7 @@ final class SuggestionSettingsModel: ObservableObject {
     private static let showAcceptanceHintDefaultsKey = "cotabbyShowAcceptanceHint"
     private static let customSuggestionTextColorHexDefaultsKey = "cotabbyCustomSuggestionTextColorHex"
     private static let ghostTextOpacityDefaultsKey = "cotabbyGhostTextOpacity"
+    private static let maximumGhostTextFontSizeDefaultsKey = "cotabbyMaximumGhostTextFontSize"
     private static let selectedEngineDefaultsKey = "cotabbySelectedEngine"
     private static let selectedWordCountPresetDefaultsKey = "cotabbySelectedWordCountPreset"
     /// Pre-#475 raw value for the shortest length tier. Kept here only so the read path can
@@ -137,6 +139,20 @@ final class SuggestionSettingsModel: ObservableObject {
     static let maximumGhostTextOpacity: Double = 1.0
     static let defaultGhostTextOpacity: Double = 1.0
     static let ghostTextOpacityStep: Double = 0.1
+    /// User-facing ceiling for inline ghost text. The overlay still derives font size from the
+    /// host caret height, but this cap prevents apps with unusually large or noisy caret geometry
+    /// from rendering suggestions like oversized UI text.
+    static let minimumGhostTextFontSize: Double = 12
+    static let maximumGhostTextFontSizeLimit: Double = 18
+    static let defaultMaximumGhostTextFontSize: Double = 14
+    static let ghostTextFontSizeStep: Double = 1
+    static let defaultShowAcceptanceHint = true
+    static let defaultMenuBarWordCountVisible = true
+    static let defaultMirrorPreference: MirrorPreference = .auto
+    /// Fresh installs should keep the typing surface quiet. The field-edge icon is still available
+    /// from Settings, but it should be an explicit affordance rather than something every user has
+    /// to turn off after noticing visual noise next to the caret.
+    static let defaultShowIndicator = false
 
     /// Hard upper bound on the persisted Extended Context blob, in characters. Sized to match what the
     /// engines actually consume rather than what they can store: the OSS base path renders this as a
@@ -161,9 +177,11 @@ final class SuggestionSettingsModel: ObservableObject {
         ) {
             modeString != ActivationIndicatorMode.hidden.rawValue
         } else {
-            userDefaults.object(forKey: Self.showCaretIndicatorDefaultsKey) as? Bool ?? true
+            userDefaults.object(forKey: Self.showCaretIndicatorDefaultsKey) as? Bool ?? Self.defaultShowIndicator
         }
-        let resolvedShowAcceptanceHint = userDefaults.object(forKey: Self.showAcceptanceHintDefaultsKey) as? Bool ?? true
+        let resolvedShowAcceptanceHint =
+            userDefaults.object(forKey: Self.showAcceptanceHintDefaultsKey) as? Bool
+            ?? Self.defaultShowAcceptanceHint
         let resolvedCustomSuggestionTextColorHex = Self.normalizedHexString(
             userDefaults.string(forKey: Self.customSuggestionTextColorHexDefaultsKey)
         )
@@ -171,6 +189,15 @@ final class SuggestionSettingsModel: ObservableObject {
             Self.defaultGhostTextOpacity
         } else {
             Self.clampedGhostTextOpacity(userDefaults.double(forKey: Self.ghostTextOpacityDefaultsKey))
+        }
+        let resolvedMaximumGhostTextFontSize: Double = if userDefaults.object(
+            forKey: Self.maximumGhostTextFontSizeDefaultsKey
+        ) == nil {
+            Self.defaultMaximumGhostTextFontSize
+        } else {
+            Self.clampedGhostTextFontSize(
+                userDefaults.double(forKey: Self.maximumGhostTextFontSizeDefaultsKey)
+            )
         }
         let resolvedEngine = userDefaults
             .string(forKey: Self.selectedEngineDefaultsKey)
@@ -200,14 +227,15 @@ final class SuggestionSettingsModel: ObservableObject {
         // Default to visible so existing installs keep the running-word-count badge they're used
         // to seeing. The toggle lets users who find the badge noisy hide it from the menu bar.
         let resolvedMenuBarWordCountVisible =
-            userDefaults.object(forKey: Self.menuBarWordCountVisibleDefaultsKey) as? Bool ?? true
+            userDefaults.object(forKey: Self.menuBarWordCountVisibleDefaultsKey) as? Bool
+            ?? Self.defaultMenuBarWordCountVisible
         // Default `.auto` keeps existing users on the byte-for-byte original inline rendering for
         // hosts that report exact/derived caret geometry; only `.estimated` hosts see the new popup
         // card. Power users can pin one mode from Settings or the menu bar.
         let resolvedMirrorPreference = userDefaults
             .string(forKey: Self.mirrorPreferenceDefaultsKey)
             .flatMap(MirrorPreference.init(rawValue:))
-            ?? .auto
+            ?? Self.defaultMirrorPreference
         let resolvedUserName: String = if userDefaults.object(forKey: Self.userNameDefaultsKey) == nil {
             configuration.defaultUserName ?? ""
         } else {
@@ -317,6 +345,7 @@ final class SuggestionSettingsModel: ObservableObject {
         showAcceptanceHint = resolvedShowAcceptanceHint
         customSuggestionTextColorHex = resolvedCustomSuggestionTextColorHex
         ghostTextOpacity = resolvedGhostTextOpacity
+        maximumGhostTextFontSize = resolvedMaximumGhostTextFontSize
         selectedEngine = resolvedEngine
         selectedWordCountPreset = resolvedWordCountPreset
         isClipboardContextEnabled = resolvedClipboardContextEnabled
@@ -352,6 +381,10 @@ final class SuggestionSettingsModel: ObservableObject {
         userDefaults.set(resolvedShowAcceptanceHint, forKey: Self.showAcceptanceHintDefaultsKey)
         persistCustomSuggestionTextColorHex(resolvedCustomSuggestionTextColorHex)
         userDefaults.set(resolvedGhostTextOpacity, forKey: Self.ghostTextOpacityDefaultsKey)
+        userDefaults.set(
+            resolvedMaximumGhostTextFontSize,
+            forKey: Self.maximumGhostTextFontSizeDefaultsKey
+        )
         persistSelectedEngine(resolvedEngine)
         persistSelectedWordCountPreset(resolvedWordCountPreset)
         persistClipboardContextEnabled(resolvedClipboardContextEnabled)
@@ -388,7 +421,7 @@ final class SuggestionSettingsModel: ObservableObject {
         userDefaults.set(resolvedAcceptanceGranularity.rawValue, forKey: Self.acceptanceGranularityDefaultsKey)
 
         // The custom indicator icon feature was removed; scrub any previously-persisted PNG so
-        // users who picked one in an older build get the default cat icon back automatically.
+        // older installations consistently use the current neutral product mark.
         userDefaults.removeObject(forKey: "cotabbyCustomIndicatorImageData")
     }
 
@@ -680,6 +713,42 @@ final class SuggestionSettingsModel: ObservableObject {
 
         ghostTextOpacity = clamped
         userDefaults.set(clamped, forKey: Self.ghostTextOpacityDefaultsKey)
+    }
+
+    func setMaximumGhostTextFontSize(_ fontSize: Double) {
+        let clamped = Self.clampedGhostTextFontSize(fontSize)
+        guard maximumGhostTextFontSize != clamped else {
+            return
+        }
+
+        maximumGhostTextFontSize = clamped
+        userDefaults.set(clamped, forKey: Self.maximumGhostTextFontSizeDefaultsKey)
+    }
+
+    /// Restores only the presentation preferences owned by the Appearance pane.
+    ///
+    /// Calling the public setters keeps `@Published` state and UserDefaults synchronized so every
+    /// live consumer (overlay, menu bar, and Settings preview) updates immediately. Engine choice,
+    /// writing behavior, shortcuts, permissions, and app exclusions intentionally remain untouched.
+    func resetAppearance() {
+        setMirrorPreference(Self.defaultMirrorPreference)
+        setShowIndicator(Self.defaultShowIndicator)
+        setShowAcceptanceHint(Self.defaultShowAcceptanceHint)
+        setMenuBarWordCountVisible(Self.defaultMenuBarWordCountVisible)
+        setCustomSuggestionTextColorHex(nil)
+        setGhostTextOpacity(Self.defaultGhostTextOpacity)
+        setMaximumGhostTextFontSize(Self.defaultMaximumGhostTextFontSize)
+    }
+
+    /// Drives the reset button's enabled state without introducing a second source of truth in UI.
+    var hasCustomAppearance: Bool {
+        mirrorPreference != Self.defaultMirrorPreference
+            || showIndicator != Self.defaultShowIndicator
+            || showAcceptanceHint != Self.defaultShowAcceptanceHint
+            || isMenuBarWordCountVisible != Self.defaultMenuBarWordCountVisible
+            || customSuggestionTextColorHex != nil
+            || ghostTextOpacity != Self.defaultGhostTextOpacity
+            || maximumGhostTextFontSize != Self.defaultMaximumGhostTextFontSize
     }
 
     func setUserName(_ name: String) {
@@ -995,6 +1064,14 @@ final class SuggestionSettingsModel: ObservableObject {
         }
 
         return min(maximumGhostTextOpacity, max(minimumGhostTextOpacity, value))
+    }
+
+    private static func clampedGhostTextFontSize(_ value: Double) -> Double {
+        guard value.isFinite else {
+            return defaultMaximumGhostTextFontSize
+        }
+
+        return min(maximumGhostTextFontSizeLimit, max(minimumGhostTextFontSize, value))
     }
 
     private static func normalizedHexString(_ hex: String?) -> String? {

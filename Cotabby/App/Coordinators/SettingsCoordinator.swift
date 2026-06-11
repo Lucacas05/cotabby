@@ -26,6 +26,7 @@ final class SettingsCoordinator: NSObject, NSWindowDelegate {
     private let clearEmojiHistory: () -> Void
 
     private var settingsWindowController: NSWindowController?
+    private weak var settingsWindow: NSWindow?
 
     init(
         appUpdateManager: AppUpdateManager,
@@ -82,17 +83,20 @@ final class SettingsCoordinator: NSObject, NSWindowDelegate {
                     suggestionEngine: suggestionEngine,
                     configuration: configuration,
                     onShowWelcome: onShowWelcome,
-                    clearEmojiHistory: clearEmojiHistory
+                    clearEmojiHistory: clearEmojiHistory,
+                    onSelectCategory: { [weak self] category in
+                        self?.syncWindowTitle(for: category)
+                    }
                 )
             )
         )
         // Sized so the native split view opens with a readable sidebar and a comfortable grouped
         // detail form. The user can still resize from here; the sidebar provides its own range.
-        let initialFrame = CGRect(x: 0, y: 0, width: 980, height: 700)
-        let minSize = NSSize(width: 900, height: 560)
+        let initialFrame = CGRect(x: 0, y: 0, width: 1_080, height: 760)
+        let minSize = NSSize(width: 920, height: 600)
         // Bump the autosave name to reset everyone onto the current default instead of restoring
         // any narrower frame saved by the previous sidebar experiments.
-        let autosaveName = "CotabbySettingsWindowV6"
+        let autosaveName = "LocalAutocompleteSettingsWindowV2"
 
         let window = NSWindow(
             contentRect: initialFrame,
@@ -100,7 +104,7 @@ final class SettingsCoordinator: NSObject, NSWindowDelegate {
             backing: .buffered,
             defer: false
         )
-        window.title = "Settings"
+        window.title = "\(ProductIdentity.displayName) Settings"
         window.center()
         window.isReleasedWhenClosed = false
         window.level = .normal
@@ -112,10 +116,15 @@ final class SettingsCoordinator: NSObject, NSWindowDelegate {
 
         let windowController = NSWindowController(window: window)
         settingsWindowController = windowController
+        settingsWindow = window
 
         NSApp.activate(ignoringOtherApps: true)
         windowController.showWindow(nil)
         window.makeKeyAndOrderFront(nil)
+    }
+
+    private func syncWindowTitle(for category: SettingsCategory) {
+        settingsWindow?.title = "\(ProductIdentity.displayName) Settings — \(category.label)"
     }
 
     func windowWillClose(_ notification: Notification) {
@@ -125,6 +134,7 @@ final class SettingsCoordinator: NSObject, NSWindowDelegate {
 
         if closingWindow == settingsWindowController?.window {
             settingsWindowController = nil
+            settingsWindow = nil
         }
     }
 }

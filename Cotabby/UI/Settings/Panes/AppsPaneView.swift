@@ -18,13 +18,13 @@ struct AppsPaneView: View {
     var body: some View {
         SettingsPaneScaffold {
             Section("Disabled Apps") {
-                Text("Cotabby won't autocomplete in these apps. Add an app you can't disable from the "
+                Text("\(ProductIdentity.displayName) won't autocomplete in these apps. Add an app you can't disable from the "
                     + "menu bar, like a launcher that closes the moment it loses focus.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
 
                 if suggestionSettings.disabledAppRules.isEmpty {
-                    Text("No apps are disabled. Cotabby is active in every supported field.")
+                    Text("No apps are disabled. \(ProductIdentity.displayName) is active in every supported field.")
                         .font(.callout)
                         .foregroundStyle(.secondary)
                 } else {
@@ -144,7 +144,7 @@ struct AppsPaneView: View {
         panel.canChooseFiles = true
         panel.directoryURL = URL(fileURLWithPath: "/Applications", isDirectory: true)
         panel.prompt = "Disable"
-        panel.message = "Choose apps where Cotabby should not autocomplete."
+        panel.message = "Choose apps where \(ProductIdentity.displayName) should not autocomplete."
 
         guard panel.runModal() == .OK else {
             return

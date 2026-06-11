@@ -10,6 +10,8 @@
 	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
+	<key>CFBundleDisplayName</key>
+	<string>$(PRODUCT_DISPLAY_NAME)</string>
 	<key>CFBundleName</key>
 	<string>$(PRODUCT_NAME)</string>
 	<key>CFBundlePackageType</key>
@@ -23,18 +25,14 @@
 	<key>LSUIElement</key>
 	<true/>
 	<key>NSAccessibilityUsageDescription</key>
-	<string>Cotabby needs Accessibility access to read and insert text in other apps.</string>
+	<string>This app needs Accessibility access to read and insert text in other apps.</string>
 	<key>SUAllowsAutomaticUpdates</key>
 	<false/>
 	<key>SUAutomaticallyUpdate</key>
 	<false/>
 	<key>SUEnableAutomaticChecks</key>
-	<true/>
+	<false/>
 	<key>SUScheduledCheckInterval</key>
 	<integer>86400</integer>
-	<key>SUFeedURL</key>
-	<string>https://updates.cotabby.app/appcast.xml</string>
-    <key>SUPublicEDKey</key>
-    <string>efJeZNfUISOs6npbxI2MLLe7sBB5tT/sVnTk9t/qBSY=</string>
 </dict>
 </plist>

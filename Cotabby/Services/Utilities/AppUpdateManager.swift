@@ -75,6 +75,10 @@ final class AppUpdateManager {
         updaterController.checkForUpdates(nil)
     }
 
+    var canCheckForUpdates: Bool {
+        hasUsableConfiguration
+    }
+
     private var hasUsableConfiguration: Bool {
         guard let feedURLString = configuredString(forInfoDictionaryKey: "SUFeedURL"),
               URL(string: feedURLString) != nil

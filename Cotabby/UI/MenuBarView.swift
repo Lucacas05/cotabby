@@ -57,23 +57,22 @@ struct MenuBarView: View {
     @ViewBuilder
     private var headerSection: some View {
         HStack(alignment: .center) {
-            Text("Cotabby")
+            Text(ProductIdentity.displayName)
                 .font(.headline)
 
-            // Ko-fi tip jar lives next to the title because the menu bar surface is the most
-            // frequented entry point. Using a Link lets SwiftUI hand the URL to NSWorkspace and
-            // dismiss the popover; a Button would need its own handler plumbing for the same effect.
-            if let kofiURL = URL(string: "https://ko-fi.com/cotabby") {
-                Link("Support Us", destination: kofiURL)
+            if let supportURL = ProductIdentity.supportURL {
+                Link("Support", destination: supportURL)
                     .buttonStyle(.borderless)
                     .font(.subheadline)
             }
 
             Spacer(minLength: 0)
 
-            Button("Report Bug", action: onReportFeedback)
-                .buttonStyle(.borderless)
-                .font(.subheadline)
+            if ProductIdentity.feedbackURL != nil {
+                Button("Report Bug", action: onReportFeedback)
+                    .buttonStyle(.borderless)
+                    .font(.subheadline)
+            }
         }
         .padding(.bottom, 12)
     }
@@ -251,10 +250,12 @@ struct MenuBarView: View {
             }
             .buttonStyle(.borderless)
 
-            Button("Check for Updates") {
-                appUpdateManager.checkForUpdates()
+            if appUpdateManager.canCheckForUpdates {
+                Button("Check for Updates") {
+                    appUpdateManager.checkForUpdates()
+                }
+                .buttonStyle(.borderless)
             }
-            .buttonStyle(.borderless)
 
             Spacer(minLength: 0)
 

@@ -73,7 +73,7 @@ final class SuggestionAvailabilityEvaluatorTests: XCTestCase {
             focusSnapshot: makeSnapshot(capability: .supported)
         )
 
-        XCTAssertEqual(reason, "Cotabby is turned off.")
+        XCTAssertEqual(reason, "\(ProductIdentity.displayName) is turned off.")
     }
 
     func test_disabledReason_whenFocusedDomainIsDisabled_returnsSiteReason() {
@@ -85,7 +85,7 @@ final class SuggestionAvailabilityEvaluatorTests: XCTestCase {
             focusSnapshot: makeSupportedSnapshotWithContext(focusedURLString: "https://www.bank.com/account")
         )
 
-        XCTAssertEqual(reason, "Cotabby is disabled on bank.com.")
+        XCTAssertEqual(reason, "\(ProductIdentity.displayName) is disabled on bank.com.")
     }
 
     func test_disabledReason_domainCheckIsInertByDefault() {
@@ -131,7 +131,7 @@ final class SuggestionAvailabilityEvaluatorTests: XCTestCase {
 
     /// Global-off takes precedence over permission-denied. Important because
     /// the copy the user sees should be the thing they most need to know; if
-    /// Cotabby is off, the Input Monitoring message is a distraction.
+    /// the app is off, the Input Monitoring message is a distraction.
     func test_disabledReason_globalDisabled_winsOverInputMonitoringDenied() {
         let reason = SuggestionAvailabilityEvaluator.disabledReason(
             globallyEnabled: false,
@@ -140,7 +140,7 @@ final class SuggestionAvailabilityEvaluatorTests: XCTestCase {
             focusSnapshot: makeSnapshot(capability: .supported)
         )
 
-        XCTAssertEqual(reason, "Cotabby is turned off.")
+        XCTAssertEqual(reason, "\(ProductIdentity.displayName) is turned off.")
     }
 
     func test_disabledReason_globalDisabled_winsOverAppDisabled() {
@@ -152,7 +152,7 @@ final class SuggestionAvailabilityEvaluatorTests: XCTestCase {
             focusSnapshot: makeSnapshot(capability: .supported)
         )
 
-        XCTAssertEqual(reason, "Cotabby is turned off.")
+        XCTAssertEqual(reason, "\(ProductIdentity.displayName) is turned off.")
     }
 
     func test_disabledReason_whenAppDisabled_returnsAppSpecificCopy() {
@@ -168,7 +168,7 @@ final class SuggestionAvailabilityEvaluatorTests: XCTestCase {
             )
         )
 
-        XCTAssertEqual(reason, "Cotabby is disabled in Safari.")
+        XCTAssertEqual(reason, "\(ProductIdentity.displayName) is disabled in Safari.")
     }
 
     // MARK: - disabledReason: capability passthrough

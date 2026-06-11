@@ -23,7 +23,7 @@ struct PermissionReminderView: View {
                 Text("Permissions needed")
                     .font(.system(size: 24, weight: .semibold, design: .rounded))
 
-                Text("Cotabby needs these permissions to work.\nGrant them in System Settings, then come back here.")
+                Text("\(ProductIdentity.displayName) needs these permissions to work.\nGrant them in System Settings, then come back here.")
                     .font(.system(size: 14, design: .rounded))
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)

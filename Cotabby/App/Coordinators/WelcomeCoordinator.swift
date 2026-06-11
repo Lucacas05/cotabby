@@ -101,6 +101,23 @@ final class WelcomeCoordinator: NSObject, NSWindowDelegate {
         showPermissionReminder()
     }
 
+    /// Brings an existing onboarding-owned window forward and reports whether one was present.
+    ///
+    /// Reopening the app from Finder or Spotlight should not place Settings over an unfinished
+    /// onboarding or permission flow. `AppDelegate` asks this coordinator first because it owns
+    /// both windows and therefore knows which surface should retain the user's attention.
+    func bringForwardIfPresent() -> Bool {
+        let window = welcomeWindowController?.window
+            ?? permissionReminderWindowController?.window
+        guard let window else {
+            return false
+        }
+
+        NSApp.activate(ignoringOtherApps: true)
+        window.makeKeyAndOrderFront(nil)
+        return true
+    }
+
     /// Manual entry point for reopening the welcome screen later from the menu.
     func showWelcome() {
         if let window = welcomeWindowController?.window {
@@ -132,7 +149,7 @@ final class WelcomeCoordinator: NSObject, NSWindowDelegate {
             backing: .buffered,
             defer: false
         )
-        window.title = "Welcome to Cotabby"
+        window.title = "Welcome to \(ProductIdentity.displayName)"
         window.titleVisibility = .hidden
         window.titlebarAppearsTransparent = true
         window.isMovableByWindowBackground = true
@@ -165,7 +182,7 @@ final class WelcomeCoordinator: NSObject, NSWindowDelegate {
         }
     }
 
-    /// Called when the user completes the full onboarding wizard ("Start Using Cotabby"). Stamps the
+    /// Called when the user completes the full onboarding wizard. Stamps the
     /// current onboarding version so the wizard does not reappear until the next revamp bumps it.
     /// This is the only thing that clears the gate: closing the window mid-flow leaves the stored
     /// version unchanged, so the wizard returns on next launch.
@@ -192,7 +209,7 @@ final class WelcomeCoordinator: NSObject, NSWindowDelegate {
             backing: .buffered,
             defer: false
         )
-        window.title = "Cotabby — Permissions"
+        window.title = "\(ProductIdentity.displayName) — Permissions"
         window.titleVisibility = .hidden
         window.titlebarAppearsTransparent = true
         window.isMovableByWindowBackground = true

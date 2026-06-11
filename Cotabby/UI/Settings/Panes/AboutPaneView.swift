@@ -13,7 +13,9 @@ struct AboutPaneView: View {
     var body: some View {
         SettingsPaneScaffold {
             Section { aboutHeader }
-            Section("Support") { supportRow }
+            if ProductIdentity.supportURL != nil {
+                Section("Support") { supportRow }
+            }
             Section("Resources") { linksRow }
             Section("Uninstall") { uninstallText }
         }
@@ -25,17 +27,13 @@ struct AboutPaneView: View {
     @ViewBuilder
     private var aboutHeader: some View {
         HStack(spacing: 12) {
-            Image("CotabbyLogo")
-                .resizable()
-                .scaledToFit()
-                .frame(width: 40, height: 40)
-                .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
+            ProductMarkView(size: 40)
 
             VStack(alignment: .leading, spacing: 2) {
-                Text("Cotabby")
+                Text(ProductIdentity.displayName)
                     .font(.system(size: 16, weight: .semibold, design: .rounded))
 
-                Text("Local macOS AI Autocomplete")
+                Text(ProductIdentity.tagline)
                     .font(.system(size: 12, design: .rounded))
                     .foregroundStyle(.secondary)
 
@@ -46,8 +44,10 @@ struct AboutPaneView: View {
 
             Spacer(minLength: 12)
 
-            Button("Check for Updates") {
-                appUpdateManager.checkForUpdates()
+            if appUpdateManager.canCheckForUpdates {
+                Button("Check for Updates") {
+                    appUpdateManager.checkForUpdates()
+                }
             }
         }
         .padding(.vertical, 4)
@@ -62,21 +62,20 @@ struct AboutPaneView: View {
         VStack(alignment: .leading, spacing: 12) {
             VStack(alignment: .leading, spacing: 8) {
                 Text(
-                    "Cotabby started from a simple belief: AI should run on your device, "
+                    "\(ProductIdentity.displayName) starts from a simple belief: AI should run on your device, "
                     + "respect your privacy, and remain open to everyone."
                 )
 
                 Text(
-                    "We're building Cotabby in our spare time, one release at a time. "
-                    + "If Cotabby has helped you, your support helps us keep improving it."
+                    "If \(ProductIdentity.displayName) has helped you, your support helps keep improving it."
                 )
             }
             .foregroundStyle(.secondary)
             .fixedSize(horizontal: false, vertical: true)
 
-            if let supportURL = URL(string: "https://ko-fi.com/cotabby") {
+            if let supportURL = ProductIdentity.supportURL {
                 Link(destination: supportURL) {
-                    Label("Support Cotabby", systemImage: "heart.fill")
+                    Label("Support \(ProductIdentity.displayName)", systemImage: "heart.fill")
                 }
                 .buttonStyle(.borderedProminent)
                 .tint(.blue)
@@ -87,14 +86,14 @@ struct AboutPaneView: View {
     @ViewBuilder
     private var linksRow: some View {
         VStack(alignment: .leading, spacing: 8) {
-            if let repoURL = URL(string: "https://github.com/FuJacob/Cotabby") {
+            if let repoURL = ProductIdentity.repositoryURL {
                 Link(destination: repoURL) {
                     Label("GitHub Repository", systemImage: "chevron.left.forwardslash.chevron.right")
                 }
             }
-            if let wikiURL = URL(string: "https://github.com/FuJacob/Cotabby/wiki") {
-                Link(destination: wikiURL) {
-                    Label("Wiki & Contributor Guide", systemImage: "book")
+            if let documentationURL = ProductIdentity.documentationURL {
+                Link(destination: documentationURL) {
+                    Label("Documentation", systemImage: "book")
                 }
             }
             Button {
@@ -109,8 +108,8 @@ struct AboutPaneView: View {
     @ViewBuilder
     private var uninstallText: some View {
         Text(
-            "Remove Cotabby from Applications. To fully clean up app data, "
-            + "delete ~/Library/Application Support/Cotabby."
+            "Remove \(ProductIdentity.displayName) from Applications. To fully clean up app data, "
+            + "delete its folder under ~/Library/Application Support."
         )
         .font(.caption)
         .foregroundStyle(.secondary)

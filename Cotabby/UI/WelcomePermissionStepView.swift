@@ -25,10 +25,10 @@ struct WelcomePermissionStepView: View {
     var body: some View {
         VStack(spacing: 28) {
             VStack(spacing: 8) {
-                Text("Enable Cotabby")
+                Text("Enable \(ProductIdentity.displayName)")
                     .font(.system(size: 24, weight: .semibold, design: .rounded))
 
-                Text("Grant permissions so Cotabby can\nread text, capture context, and accept completions.")
+                Text("Grant permissions so \(ProductIdentity.displayName) can\nread text, capture context, and accept completions.")
                     .font(.system(size: 14, design: .rounded))
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)

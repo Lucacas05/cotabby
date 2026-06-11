@@ -11,13 +11,13 @@ struct PermissionsPaneView: View {
     var body: some View {
         SettingsPaneScaffold(callout: callout) {
             Section("Permissions") {
-                Text("Cotabby needs Accessibility, Input Monitoring, and Screen Recording for autocomplete.")
+                Text("\(ProductIdentity.displayName) needs Accessibility, Input Monitoring, and Screen Recording for autocomplete.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
 
                 permissionRow(
                     title: "Accessibility",
-                    description: "Lets Cotabby see which text field has focus and read its contents " +
+                    description: "Lets \(ProductIdentity.displayName) see which text field has focus and read its contents " +
                         "so it knows what to continue.",
                     granted: permissionManager.accessibilityGranted,
                     action: permissionManager.openAccessibilitySettings
@@ -25,7 +25,7 @@ struct PermissionsPaneView: View {
 
                 permissionRow(
                     title: "Input Monitoring",
-                    description: "Lets Cotabby see your keystrokes so it can detect when to suggest " +
+                    description: "Lets \(ProductIdentity.displayName) see your keystrokes so it can detect when to suggest " +
                         "and which key you used to accept.",
                     granted: permissionManager.inputMonitoringGranted,
                     action: permissionManager.openInputMonitoringSettings
@@ -33,7 +33,7 @@ struct PermissionsPaneView: View {
 
                 permissionRow(
                     title: "Screen Recording",
-                    description: "Lets Cotabby take a screenshot of the focused window to use as " +
+                    description: "Lets \(ProductIdentity.displayName) take a screenshot of the focused window to use as " +
                         "additional context. Required even when Fast Mode skips capture.",
                     granted: permissionManager.screenRecordingGranted,
                     action: permissionManager.openScreenRecordingSettings
@@ -59,7 +59,7 @@ struct PermissionsPaneView: View {
         }
         return SettingsPaneCallout(
             tone: .warning,
-            message: "Cotabby needs more access to run. Grant the permissions below to enable autocomplete."
+            message: "\(ProductIdentity.displayName) needs more access to run. Grant the permissions below to enable autocomplete."
         )
     }
 

@@ -38,6 +38,20 @@ final class SuggestionTextColorCodecTests: XCTestCase {
 }
 
 final class SuggestionModelValueTests: XCTestCase {
+    func test_productIdentityUsesForkPlaceholderName() {
+        XCTAssertEqual(ProductIdentity.displayName, "AutoComplete")
+    }
+
+    func test_renderModeChoicesExposeDistinctLabelsAndSymbols() {
+        let labels = Set(MirrorPreference.allCases.map(\.displayLabel))
+        let symbols = Set(MirrorPreference.allCases.map(\.systemImageName))
+
+        XCTAssertEqual(labels.count, MirrorPreference.allCases.count)
+        XCTAssertEqual(symbols.count, MirrorPreference.allCases.count)
+        XCTAssertFalse(MirrorPreference.allCases.contains { $0.displayLabel.isEmpty })
+        XCTAssertFalse(MirrorPreference.allCases.contains { $0.systemImageName.isEmpty })
+    }
+
     func test_wordCountPresetsExposeMatchingPromptInstructionsAndTokenBudgets() {
         XCTAssertEqual(SuggestionWordCountPreset.twoToFour.promptInstruction, "Return only the next 2 to 4 words.")
         XCTAssertEqual(SuggestionWordCountPreset.twoToFour.suggestedPredictionTokenBudget, 5)
@@ -241,6 +255,19 @@ final class GhostTextOpacitySettingsTests: XCTestCase {
         }
     }
 
+    func test_defaultMaximumGhostTextFontSizeMatchesQuietOverlayDefault() {
+        runOnMainActor {
+            XCTAssertEqual(SuggestionSettingsModel.defaultMaximumGhostTextFontSize, 14)
+            XCTAssertEqual(makeModel().maximumGhostTextFontSize, 14)
+        }
+    }
+
+    func test_freshSettingsKeepFieldIndicatorHiddenByDefault() {
+        runOnMainActor {
+            XCTAssertFalse(makeModel().showIndicator)
+        }
+    }
+
     func test_setOpacityClampsBelowMinimumAndAboveMaximum() {
         runOnMainActor {
             let model = makeModel()
@@ -253,12 +280,73 @@ final class GhostTextOpacitySettingsTests: XCTestCase {
         }
     }
 
+    func test_setMaximumGhostTextFontSizeClampsBelowMinimumAndAboveMaximum() {
+        runOnMainActor {
+            let model = makeModel()
+
+            model.setMaximumGhostTextFontSize(4)
+            XCTAssertEqual(model.maximumGhostTextFontSize, SuggestionSettingsModel.minimumGhostTextFontSize)
+
+            model.setMaximumGhostTextFontSize(99)
+            XCTAssertEqual(model.maximumGhostTextFontSize, SuggestionSettingsModel.maximumGhostTextFontSizeLimit)
+        }
+    }
+
     func test_opacityPersistsAcrossModelReload() {
         runOnMainActor {
             let userDefaults = makeUserDefaults()
             makeModel(userDefaults: userDefaults).setGhostTextOpacity(0.5)
 
             XCTAssertEqual(makeModel(userDefaults: userDefaults).ghostTextOpacity, 0.5)
+        }
+    }
+
+    func test_maximumGhostTextFontSizePersistsAcrossModelReload() {
+        runOnMainActor {
+            let userDefaults = makeUserDefaults()
+            makeModel(userDefaults: userDefaults).setMaximumGhostTextFontSize(13)
+
+            XCTAssertEqual(makeModel(userDefaults: userDefaults).maximumGhostTextFontSize, 13)
+        }
+    }
+
+    func test_resetAppearanceRestoresOnlyVisualDefaultsAndPersistsThem() {
+        runOnMainActor {
+            let userDefaults = makeUserDefaults()
+            let model = makeModel(userDefaults: userDefaults)
+
+            model.setGloballyEnabled(false)
+            model.setMirrorPreference(.alwaysMirror)
+            model.setShowIndicator(true)
+            model.setShowAcceptanceHint(false)
+            model.setMenuBarWordCountVisible(false)
+            model.setCustomSuggestionTextColorHex("3B82F6")
+            model.setGhostTextOpacity(0.4)
+            model.setMaximumGhostTextFontSize(18)
+
+            XCTAssertTrue(model.hasCustomAppearance)
+
+            model.resetAppearance()
+
+            XCTAssertFalse(model.hasCustomAppearance)
+            XCTAssertFalse(model.isGloballyEnabled)
+            XCTAssertEqual(model.mirrorPreference, SuggestionSettingsModel.defaultMirrorPreference)
+            XCTAssertEqual(model.showIndicator, SuggestionSettingsModel.defaultShowIndicator)
+            XCTAssertEqual(model.showAcceptanceHint, SuggestionSettingsModel.defaultShowAcceptanceHint)
+            XCTAssertEqual(
+                model.isMenuBarWordCountVisible,
+                SuggestionSettingsModel.defaultMenuBarWordCountVisible
+            )
+            XCTAssertNil(model.customSuggestionTextColorHex)
+            XCTAssertEqual(model.ghostTextOpacity, SuggestionSettingsModel.defaultGhostTextOpacity)
+            XCTAssertEqual(
+                model.maximumGhostTextFontSize,
+                SuggestionSettingsModel.defaultMaximumGhostTextFontSize
+            )
+
+            let reloaded = makeModel(userDefaults: userDefaults)
+            XCTAssertFalse(reloaded.hasCustomAppearance)
+            XCTAssertFalse(reloaded.isGloballyEnabled)
         }
     }
 

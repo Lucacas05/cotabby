@@ -445,7 +445,7 @@ enum SuggestionDebugState: Equatable {
         case .generating:
             return "Requesting a completion from the active suggestion backend."
         case .ready:
-            return "Ready means Cotabby has buffered a non-empty normalized completion for this field and can render it as ghost text."
+            return "Ready means \(ProductIdentity.displayName) has buffered a non-empty normalized completion for this field and can render it as ghost text."
         }
     }
 }

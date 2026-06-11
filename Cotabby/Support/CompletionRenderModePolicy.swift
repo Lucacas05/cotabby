@@ -27,6 +27,19 @@ enum MirrorPreference: String, Codable, CaseIterable, Identifiable, Equatable, S
             return "Popup"
         }
     }
+
+    /// SF Symbol paired with the mode in segmented controls. Keeping this beside `displayLabel`
+    /// prevents Settings surfaces from inventing different visual vocabularies for the same mode.
+    var systemImageName: String {
+        switch self {
+        case .auto:
+            return "sparkles"
+        case .alwaysInline:
+            return "text.cursor"
+        case .alwaysMirror:
+            return "rectangle.on.rectangle"
+        }
+    }
 }
 
 /// Pure rule that translates "what kind of geometry do we have, and what does the user want?" into

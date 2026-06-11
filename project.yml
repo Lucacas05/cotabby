@@ -118,10 +118,10 @@ targets:
           - $(inherited)
           - "@executable_path/../Frameworks"
         MARKETING_VERSION: "1.0"
-        PRODUCT_BUNDLE_IDENTIFIER: com.jacobfu.tabby
+        PRODUCT_BUNDLE_IDENTIFIER: com.example.localautocomplete
+        PRODUCT_DISPLAY_NAME: AutoComplete
         PRODUCT_NAME: $(TARGET_NAME)
         REGISTER_APP_GROUPS: YES
-        SPARKLE_PUBLIC_ED_KEY: efJeZNfUISOs6npbxI2MLLe7sBB5tT/sVnTk9t/qBSY=
         STRING_CATALOG_GENERATE_SYMBOLS: YES
         SWIFT_APPROACHABLE_CONCURRENCY: YES
         SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
@@ -149,7 +149,7 @@ targets:
           - "@executable_path/../Frameworks"
           - "@loader_path/../Frameworks"
         MACOSX_DEPLOYMENT_TARGET: "14.0"
-        PRODUCT_BUNDLE_IDENTIFIER: com.jacobfu.tabby.CotabbyTests
+        PRODUCT_BUNDLE_IDENTIFIER: com.example.localautocomplete.CotabbyTests
         PRODUCT_MODULE_NAME: $(TARGET_NAME)
         PRODUCT_NAME: $(TARGET_NAME)
         SDKROOT: macosx

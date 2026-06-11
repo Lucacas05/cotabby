@@ -30,6 +30,7 @@ struct SettingsContainerView: View {
     let configuration: SuggestionConfiguration
     let onShowWelcome: () -> Void
     let clearEmojiHistory: () -> Void
+    let onSelectCategory: (SettingsCategory) -> Void
 
     @AppStorage("cotabbySettingsSelectedCategoryV2")
     private var storedCategoryRawValue: String = SettingsCategory.general.rawValue
@@ -65,11 +66,11 @@ struct SettingsContainerView: View {
             permissionManager.refresh()
             // Set the title unconditionally on open: when the restored selection equals the
             // initial @State value, `.onChange` does not fire and the title would stay blank.
-            syncWindowTitle(for: selection)
+            onSelectCategory(selection)
         }
         .onChange(of: selection) { _, newValue in
             storedCategoryRawValue = newValue.rawValue
-            syncWindowTitle(for: newValue)
+            onSelectCategory(newValue)
         }
         .onChange(of: columnVisibility) { _, newValue in
             if newValue != .all {
@@ -103,6 +104,8 @@ struct SettingsContainerView: View {
                 onShowWelcome: onShowWelcome,
                 clearEmojiHistory: clearEmojiHistory
             )
+        case .appearance:
+            AppearancePaneView(suggestionSettings: suggestionSettings)
         case .engineAndModel:
             EngineAndModelPaneView(
                 suggestionSettings: suggestionSettings,
@@ -146,16 +149,4 @@ struct SettingsContainerView: View {
         return .general
     }
 
-    /// Mirrors the chosen pane into the hosting `NSWindow.title` so the title bar reflects the
-    /// current selection. macOS settings windows traditionally use an inline title for the active
-    /// pane; this preserves that convention without rendering a duplicate large title inside the
-    /// content.
-    private func syncWindowTitle(for category: SettingsCategory) {
-        // Capture the key window now: between the tap and the async block running, a popover or
-        // alert could become key and we would retitle the wrong window.
-        let window = NSApp.keyWindow
-        DispatchQueue.main.async {
-            window?.title = "Settings — \(category.label)"
-        }
-    }
 }

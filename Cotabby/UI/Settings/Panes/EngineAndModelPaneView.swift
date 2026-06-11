@@ -49,7 +49,7 @@ struct EngineAndModelPaneView: View {
             Button("Delete") { deleteModel(model) }
             Button("Cancel", role: .cancel) {}
         } message: { model in
-            Text("Remove \(model.displayName) from Cotabby's local models folder?")
+            Text("Remove \(model.displayName) from \(ProductIdentity.displayName)'s local models folder?")
         }
     }
 

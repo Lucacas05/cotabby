@@ -17,7 +17,7 @@ struct WritingPaneView: View {
                 } label: {
                     SettingsRowLabel(
                         title: "Length",
-                        description: "How many words Cotabby aims for per suggestion. Shorter is snappier; " +
+                        description: "How many words \(ProductIdentity.displayName) aims for per suggestion. Shorter is snappier; " +
                             "longer covers more thoughts but takes longer to generate."
                     )
                 }
@@ -39,7 +39,7 @@ struct WritingPaneView: View {
                         Text("Name")
                             .font(.system(size: 13, weight: .medium))
 
-                        TextField("What should Cotabby call you?", text: Binding(
+                        TextField("What should \(ProductIdentity.displayName) call you?", text: Binding(
                             get: { suggestionSettings.userName },
                             set: { suggestionSettings.setUserName($0) }
                         ))

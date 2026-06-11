@@ -15,7 +15,7 @@ struct PerformancePaneView: View {
             Section("Tracking") {
                 Toggle("Enable Performance Tracking", isOn: trackingEnabledBinding)
                     .help(
-                        "When enabled, Cotabby records the timestamp, model, and elapsed time " +
+                        "When enabled, \(ProductIdentity.displayName) records the timestamp, model, and elapsed time " +
                         "of every LLM request. Only the most recent " +
                         "\(PerformanceMetricsStore.maximumEntries) requests are retained."
                     )

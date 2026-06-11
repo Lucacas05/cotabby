@@ -103,7 +103,7 @@ final class LaunchAtLoginService: ObservableObject {
         case .requiresApproval:
             return .requiresApproval
         case .notFound:
-            return .unavailable("Move Cotabby to the Applications folder and relaunch to enable this.")
+            return .unavailable("Move \(ProductIdentity.displayName) to the Applications folder and relaunch to enable this.")
         @unknown default:
             return .unavailable("Open at Login is unavailable for an unknown reason.")
         }

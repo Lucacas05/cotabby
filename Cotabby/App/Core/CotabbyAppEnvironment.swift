@@ -35,7 +35,6 @@ final class CotabbyAppEnvironment {
     let performanceMetricsStore: PerformanceMetricsStore
     let settingsCoordinator: SettingsCoordinator
     let activationIndicatorController: ActivationIndicatorController
-    let focusDebugOverlayController: FocusDebugOverlayController?
 
     private var cancellables = Set<AnyCancellable>()
 
@@ -80,8 +79,7 @@ final class CotabbyAppEnvironment {
                     return true
                 }
                 return false
-            },
-            publishesPollingEvents: FocusDebugOverlayController.isEnabled
+            }
         )
         // The snapshot is poll-based, so after a fast app switch the closure may briefly
         // evaluate against the previous app's identity until the next AX poll fires. This
@@ -231,9 +229,6 @@ final class CotabbyAppEnvironment {
         self.performanceMetricsStore = performanceMetricsStore
         self.settingsCoordinator = settingsCoordinator
         self.activationIndicatorController = activationIndicatorController
-        self.focusDebugOverlayController = FocusDebugOverlayController.isEnabled
-            ? FocusDebugOverlayController()
-            : nil
 
         // Update the AX polling timer whenever the user changes the poll interval setting.
         suggestionSettings.$focusPollIntervalMilliseconds

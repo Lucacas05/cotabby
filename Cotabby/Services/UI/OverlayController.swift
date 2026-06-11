@@ -12,9 +12,8 @@ import SwiftUI
 @MainActor
 final class OverlayController: SuggestionOverlayControlling {
     private enum Layout {
-        static let minimumGhostFontSize: CGFloat = 14
-        static let maximumGhostFontSize: CGFloat = 24
-        static let maximumEstimatedGhostFontSize: CGFloat = 16
+        static let minimumGhostFontSize: CGFloat = 12
+        static let maximumEstimatedGhostFontSize: CGFloat = 14
         static let fontToLineHeightRatio: CGFloat = 0.78
     }
 
@@ -139,6 +138,16 @@ final class OverlayController: SuggestionOverlayControlling {
             forCaretHeight: stabilizedCaretHeight,
             caretQuality: geometry.caretQuality
         )
+        CotabbyLogger.suggestion.debug(
+            "Resolved inline ghost-text size",
+            metadata: [
+                "caret_height": .stringConvertible(geometry.caretRect.height),
+                "stabilized_caret_height": .stringConvertible(stabilizedCaretHeight),
+                "caret_quality": .string(geometry.caretQuality.label),
+                "configured_font_max": .stringConvertible(suggestionSettings.maximumGhostTextFontSize),
+                "resolved_font_size": .stringConvertible(fontSize)
+            ]
+        )
         // `nil` when the user disabled the hint or no accept key is bound — in that case the layout
         // drops the keycap and its reserved width so ghost text can use the full line.
         let acceptanceHintLabel = suggestionSettings.acceptanceHintLabel
@@ -257,15 +266,14 @@ final class OverlayController: SuggestionOverlayControlling {
         forCaretHeight caretHeight: CGFloat,
         caretQuality: CaretGeometryQuality
     ) -> CGFloat {
-        let proposedSize = max(
-            Layout.minimumGhostFontSize,
-            caretHeight * Layout.fontToLineHeightRatio
+        GhostFontSizePolicy.resolve(
+            caretHeight: caretHeight,
+            caretQuality: caretQuality,
+            preferredMaximum: CGFloat(suggestionSettings.maximumGhostTextFontSize),
+            minimum: Layout.minimumGhostFontSize,
+            estimatedMaximum: Layout.maximumEstimatedGhostFontSize,
+            fontToLineHeightRatio: Layout.fontToLineHeightRatio
         )
-        let qualityCap = caretQuality == .estimated
-            ? Layout.maximumEstimatedGhostFontSize
-            : Layout.maximumGhostFontSize
-
-        return min(proposedSize, qualityCap)
     }
 
     private func targetScreenVisibleFrame(for caretRect: CGRect) -> CGRect {

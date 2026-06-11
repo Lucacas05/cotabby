@@ -1,30 +1,27 @@
 import SwiftUI
 
 /// File overview:
-/// "General" detail pane of the redesigned Settings window. Groups settings into four visually
-/// separated `Section`s (`.formStyle(.grouped)` renders each as its own rounded card, which is
-/// the macOS-native equivalent of a divider): top-level on/off toggles, behavior tuning, display
-/// surface, and appearance. The `Display` picker label here matches the same name used by the
-/// menu-bar quick control so users can connect the two.
+/// "General" detail pane of the redesigned Settings window. Groups app-wide status, launch
+/// behavior, and non-visual suggestion behavior into macOS-native grouped form sections.
+/// Visual controls live in `AppearancePaneView`; keeping them out of General prevents two panes
+/// from competing to explain the same display state.
 struct GeneralPaneView: View {
     @ObservedObject var suggestionSettings: SuggestionSettingsModel
     @ObservedObject var launchAtLoginService: LaunchAtLoginService
     let onShowWelcome: () -> Void
     let clearEmojiHistory: () -> Void
 
-    @Environment(\.colorScheme) private var colorScheme
-
     var body: some View {
         SettingsPaneScaffold {
-            if let kofiURL = URL(string: "https://ko-fi.com/cotabby") {
+            if let supportURL = ProductIdentity.supportURL {
                 Section {
                     HStack(spacing: 12) {
-                        Text("Enjoying Cotabby? Please consider supporting free open-source software")
+                        Text("Enjoying \(ProductIdentity.displayName)?")
                             .font(.subheadline)
                             .foregroundStyle(.white)
                             .lineLimit(1)
                         Spacer(minLength: 0)
-                        Link(destination: kofiURL) {
+                        Link(destination: supportURL) {
                             HStack(spacing: 5) {
                                 Image(systemName: "heart.fill")
                                     .foregroundStyle(.pink)
@@ -47,7 +44,7 @@ struct GeneralPaneView: View {
                 Toggle(isOn: globallyEnabledBinding) {
                     SettingsRowLabel(
                         title: "Enable Globally",
-                        description: "Turn Cotabby off everywhere without quitting the app."
+                        description: "Turn \(ProductIdentity.displayName) off everywhere without quitting the app."
                     )
                 }
 
@@ -144,86 +141,6 @@ struct GeneralPaneView: View {
                 }
             }
 
-            Section("Display") {
-                // The `.help()` tooltip was promoted to inline subtext so a novice can read the
-                // same guidance without knowing to hover.
-                Picker(selection: mirrorPreferenceBinding) {
-                    ForEach(MirrorPreference.allCases) { preference in
-                        Text(preference.displayLabel).tag(preference)
-                    }
-                } label: {
-                    SettingsRowLabel(
-                        title: "Suggestion Display",
-                        description: "Auto picks inline ghost text when the app's caret position is reliable, " +
-                            "and a popup card when it isn't. Inline or Popup pins one style for every app."
-                    )
-                }
-                .pickerStyle(.menu)
-
-                Toggle(isOn: showIndicatorBinding) {
-                    SettingsRowLabel(
-                        title: "Show Field Indicator",
-                        description: "Show a small icon at the edge of a field when Cotabby is ready to suggest."
-                    )
-                }
-
-                Toggle(isOn: menuBarWordCountVisibleBinding) {
-                    SettingsRowLabel(
-                        title: "Show Word Count in Menu Bar",
-                        description: "Show a running count of words you've accepted next to the menu bar icon."
-                    )
-                }
-
-                Toggle(isOn: showAcceptanceHintBinding) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        HStack(spacing: 4) {
-                            Text("Show")
-                            Text(suggestionSettings.acceptanceKeyLabel)
-                                .font(.system(.body, design: .rounded).weight(.semibold))
-                                .padding(.horizontal, 5)
-                                .padding(.vertical, 1)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 4, style: .continuous)
-                                        .fill(.quaternary)
-                                )
-                            Text("Key Hint")
-                        }
-                        Text("Show the accept-key badge next to the ghost text so you remember which key inserts it.")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                }
-            }
-
-            Section("Appearance") {
-                LabeledContent("Ghost Text Color") {
-                    HStack(spacing: 8) {
-                        ForEach(GhostTextColorPreset.all) { preset in
-                            ghostColorSwatch(for: preset)
-                        }
-                    }
-                }
-
-                LabeledContent("Ghost Text Opacity") {
-                    HStack(spacing: 10) {
-                        TickMarkSlider(
-                            value: ghostTextOpacityBinding,
-                            range: SuggestionSettingsModel.minimumGhostTextOpacity
-                                ... SuggestionSettingsModel.maximumGhostTextOpacity,
-                            step: SuggestionSettingsModel.ghostTextOpacityStep
-                        )
-                        .frame(width: 180)
-
-                        Text(ghostTextOpacityLabel)
-                            .font(.callout)
-                            .monospacedDigit()
-                            .foregroundStyle(.secondary)
-                            .frame(width: 42, alignment: .trailing)
-                    }
-                }
-            }
-
             Section("Help") {
                 LabeledContent("Onboarding") {
                     Button("Open Welcome Guide") {
@@ -240,27 +157,6 @@ struct GeneralPaneView: View {
         Binding(
             get: { suggestionSettings.isGloballyEnabled },
             set: { suggestionSettings.setGloballyEnabled($0) }
-        )
-    }
-
-    private var showIndicatorBinding: Binding<Bool> {
-        Binding(
-            get: { suggestionSettings.showIndicator },
-            set: { suggestionSettings.setShowIndicator($0) }
-        )
-    }
-
-    private var showAcceptanceHintBinding: Binding<Bool> {
-        Binding(
-            get: { suggestionSettings.showAcceptanceHint },
-            set: { suggestionSettings.setShowAcceptanceHint($0) }
-        )
-    }
-
-    private var mirrorPreferenceBinding: Binding<MirrorPreference> {
-        Binding(
-            get: { suggestionSettings.mirrorPreference },
-            set: { suggestionSettings.setMirrorPreference($0) }
         )
     }
 
@@ -312,62 +208,11 @@ struct GeneralPaneView: View {
     /// to the plain explanation — so the row reflects real login-item state, not just the switch.
     private var launchAtLoginDescription: String {
         if launchAtLoginService.state.isEnabled {
-            return "Start Cotabby automatically when you log in to your Mac."
+            return "Start \(ProductIdentity.displayName) automatically when you log in to your Mac."
         }
         return launchAtLoginService.state.detail
             ?? launchAtLoginService.lastErrorMessage
-            ?? "Start Cotabby automatically when you log in to your Mac."
-    }
-
-    private var menuBarWordCountVisibleBinding: Binding<Bool> {
-        Binding(
-            get: { suggestionSettings.isMenuBarWordCountVisible },
-            set: { suggestionSettings.setMenuBarWordCountVisible($0) }
-        )
-    }
-
-    private var ghostTextOpacityBinding: Binding<Double> {
-        Binding(
-            get: { suggestionSettings.ghostTextOpacity },
-            set: { suggestionSettings.setGhostTextOpacity($0) }
-        )
-    }
-
-    // MARK: - Ghost color swatch helpers
-
-    /// Mirrors the overlay's automatic fallback (`GhostSuggestionView.ghostColor`) so the Automatic
-    /// swatch previews the same gray the user will actually see.
-    private var automaticGhostTextColor: Color {
-        colorScheme == .dark
-            ? Color(red: 0.65, green: 0.65, blue: 0.65)
-            : Color(red: 0.45, green: 0.45, blue: 0.45)
-    }
-
-    private var ghostTextOpacityLabel: String {
-        "\(Int((suggestionSettings.ghostTextOpacity * 100).rounded()))%"
-    }
-
-    @ViewBuilder
-    private func ghostColorSwatch(for preset: GhostTextColorPreset) -> some View {
-        let isSelected = GhostTextColorPreset.matching(
-            hex: suggestionSettings.customSuggestionTextColorHex
-        ) == preset
-
-        Button {
-            suggestionSettings.setCustomSuggestionTextColorHex(preset.hex)
-        } label: {
-            Circle()
-                .fill(swatchFill(for: preset))
-                .frame(width: 18, height: 18)
-                .overlay(
-                    Circle()
-                        .strokeBorder(
-                            Color.primary.opacity(isSelected ? 0.9 : 0.18),
-                            lineWidth: isSelected ? 2 : 1
-                        )
-                )
-        }
-        .buttonStyle(.plain)
+            ?? "Start \(ProductIdentity.displayName) automatically when you log in to your Mac."
     }
 
     @ViewBuilder
@@ -448,13 +293,4 @@ struct GeneralPaneView: View {
         .accessibilityValue(isSelected ? "Selected" : "")
     }
 
-    private func swatchFill(for preset: GhostTextColorPreset) -> Color {
-        guard let hex = preset.hex,
-              let color = SuggestionTextColorCodec.color(fromHex: hex)
-        else {
-            return automaticGhostTextColor
-        }
-
-        return color
-    }
 }

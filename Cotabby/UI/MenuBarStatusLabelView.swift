@@ -13,11 +13,8 @@ struct MenuBarStatusLabelView: View {
 
     var body: some View {
         HStack(spacing: 2) {
-            Image("MenuBarCatIcon")
-                .renderingMode(.template)
-                .resizable()
-                .scaledToFit()
-                .frame(height: 16)
+            Image(systemName: "sparkle")
+                .font(.system(size: 14, weight: .semibold))
 
             if suggestionSettings.isMenuBarWordCountVisible,
                let label = WordCountFormatter.compactLabel(

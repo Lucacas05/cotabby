@@ -295,14 +295,10 @@ private enum WelcomeStep: Int, Comparable {
 extension WelcomeView {
     fileprivate var welcomeStep: some View {
         VStack(spacing: 24) {
-            Image("CotabbyLogo")
-                .resizable()
-                .scaledToFit()
-                .frame(width: 72, height: 72)
-                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            ProductMarkView(size: 72)
 
             VStack(spacing: 8) {
-                Text("Welcome to Cotabby")
+                Text("Welcome to \(ProductIdentity.displayName)")
                     .font(.system(size: 28, weight: .semibold, design: .rounded))
 
                 Text("AI autocomplete in any text field, all done locally.")
@@ -325,7 +321,7 @@ extension WelcomeView {
     fileprivate var aboutYouStep: some View {
         VStack(spacing: 24) {
             VStack(spacing: 8) {
-                Text("Tell Cotabby about yourself")
+                Text("Tell \(ProductIdentity.displayName) about yourself")
                     .font(.system(size: 24, weight: .semibold, design: .rounded))
 
                 Text("This personalizes your suggestions. Everything here is optional.")
@@ -339,7 +335,7 @@ extension WelcomeView {
                     Text("Name")
                         .font(.system(size: 13, weight: .medium))
 
-                    TextField("What should Cotabby call you?", text: Binding(
+                    TextField("What should \(ProductIdentity.displayName) call you?", text: Binding(
                         get: { suggestionSettings.userName },
                         set: { suggestionSettings.setUserName($0) }
                     ))
@@ -399,7 +395,7 @@ extension WelcomeView {
             }
 
             // 2x2 layout: the two suggestion-acceptance keys stack in the left column, while the
-            // opt-in Toggle Tabby hotkey sits on the right. `.top` alignment keeps the left column's
+            // opt-in global toggle hotkey sits on the right. `.top` alignment keeps the left column's
             // first row visually aligned with the single right-column row.
             HStack(alignment: .top, spacing: 32) {
                 VStack(spacing: 16) {
@@ -455,7 +451,7 @@ extension WelcomeView {
                 // No `onReset` here: the toggle hotkey is opt-in and has no factory default, so the
                 // only meaningful "reset" is unbind, which the Clear gesture in the recorder covers.
                 keybindRow(
-                    title: "Toggle Tabby",
+                    title: "Toggle App",
                     keyLabel: suggestionSettings.globalToggleKeyLabel,
                     action: .toggleTabby,
                     isRecording: $isRecordingOnboardingGlobalToggleKeybind,
@@ -564,12 +560,12 @@ extension WelcomeView {
                 Image(systemName: "menubar.arrow.up.rectangle")
                     .foregroundStyle(.tertiary)
 
-                Text("Find Cotabby in your menu bar.")
+                Text("Find \(ProductIdentity.displayName) in your menu bar.")
                     .font(.system(size: 13, weight: .medium, design: .rounded))
                     .foregroundStyle(.tertiary)
             }
 
-            WelcomeButton(title: "Start Using Cotabby") {
+            WelcomeButton(title: "Start Using \(ProductIdentity.displayName)") {
                 onDismiss()
             }
             .padding(.top, 4)

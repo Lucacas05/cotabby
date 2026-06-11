@@ -8,6 +8,7 @@ import Foundation
 /// is switched via the engine dropdown at the top of that pane.
 enum SettingsCategory: String, CaseIterable, Hashable, Identifiable {
     case general
+    case appearance
     case engineAndModel
     case writing
     case advanced
@@ -22,6 +23,7 @@ enum SettingsCategory: String, CaseIterable, Hashable, Identifiable {
     var label: String {
         switch self {
         case .general: return "General"
+        case .appearance: return "Appearance"
         case .engineAndModel: return "Engine & Model"
         case .writing: return "Writing"
         case .advanced: return "Advanced"
@@ -37,6 +39,7 @@ enum SettingsCategory: String, CaseIterable, Hashable, Identifiable {
     var systemImage: String {
         switch self {
         case .general: return "gearshape.fill"
+        case .appearance: return "paintpalette.fill"
         case .engineAndModel: return "cpu.fill"
         case .writing: return "square.and.pencil"
         case .advanced: return "slider.horizontal.3"

@@ -53,7 +53,7 @@ enum SettingsAttentionEvaluator {
         switch category {
         case .permissions:
             guard !inputs.permissionsGranted else { return nil }
-            return "Cotabby needs more access to run. Grant the permissions below to enable autocomplete."
+            return "\(ProductIdentity.displayName) needs more access to run. Grant the permissions below to enable autocomplete."
 
         case .engineAndModel:
             switch inputs.selectedEngine {
@@ -67,7 +67,7 @@ enum SettingsAttentionEvaluator {
                 return reason
             }
 
-        case .general, .writing, .advanced, .shortcuts, .apps, .performance, .about:
+        case .general, .appearance, .writing, .advanced, .shortcuts, .apps, .performance, .about:
             return nil
         }
     }
